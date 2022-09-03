@@ -1,12 +1,14 @@
 class ReactiveEffect{
   private _fn: any;
 
-  constructor(fn){
+  // public scheduler? 这种写法需要注意下，之前不知道
+  constructor(fn, public scheduler?){
     this._fn = fn
+    this.scheduler = scheduler
   }
   run(){
     activeEffect = this
-    this._fn()
+    return this._fn() // 调用结果要返回下
   }
 }
 const targetMap = new Map()
@@ -29,12 +31,17 @@ export function trigger(target, key){
   const deps = depsMap.get(key)
 
   for(const effect of deps){
-    effect.run()
+    if(effect.scheduler){
+      effect.scheduler()
+    }else{
+      effect.run()
+    }
   }
 }
 
 let activeEffect;
-export function effect(fn){
-  const effect = new ReactiveEffect(fn)
+export function effect(fn, options: any = {}){
+  const effect = new ReactiveEffect(fn, options.scheduler)
   effect.run()
+  return effect.run.bind(effect) // 返回一个函数，需要指定下函数内部的this
 }
