@@ -1,8 +1,12 @@
-import { mutableHandler, readonlyHandler } from './baseHandlers'
+import {
+	mutableHandler,
+	readonlyHandler,
+	shallowReadonlyHandler,
+} from './baseHandlers'
 
 export const enum ReactiveFlags {
-  IS_REACTIVE = '__v_isReactive',
-  IS_READONLY = '__v_isReadonly',
+	IS_REACTIVE = '__v_isReactive',
+	IS_READONLY = '__v_isReadonly',
 }
 
 export function reactive(raw) {
@@ -13,13 +17,17 @@ export function readonly(raw) {
 	return createActiveObject(raw, readonlyHandler)
 }
 
+export function shallowReadonly(raw) {
+	return createActiveObject(raw, shallowReadonlyHandler)
+}
+
 export function isReactive(value): boolean {
-  // 注意下：不是响应式对象的情况，会返回undefined，需要！！转下
-  return !!value[ReactiveFlags.IS_REACTIVE]
+	// 注意下：不是响应式对象的情况，会返回undefined，需要！！转下
+	return !!value[ReactiveFlags.IS_REACTIVE]
 }
 
 export function isReadonly(value): boolean {
-  return !!value[ReactiveFlags.IS_READONLY]
+	return !!value[ReactiveFlags.IS_READONLY]
 }
 
 function createActiveObject(raw, baseHandler) {

@@ -1,4 +1,4 @@
-import { isObject } from '../shared'
+import { extend, isObject } from '../shared'
 import { track, trigger } from './effect'
 import { ReactiveFlags, reactive, readonly } from './reactive'
 
@@ -6,8 +6,9 @@ import { ReactiveFlags, reactive, readonly } from './reactive'
 const get = createGetter()
 const set = createSetter()
 const readonlyGet = createGetter(true)
+const shallowReadonlyGet = createGetter(true, true)
 
-function createGetter(isReadonly = false) {
+function createGetter(isReadonly = false, shallow = false) {
 	return function get(target, key) {
 		if (key === ReactiveFlags.IS_REACTIVE) {
 			return !isReadonly
@@ -16,6 +17,11 @@ function createGetter(isReadonly = false) {
 		}
 
 		const result = Reflect.get(target, key)
+
+		if (shallow) {
+			return result
+		}
+
 		if (isObject(result)) {
 			return isReadonly ? readonly(result) : reactive(result)
 		}
@@ -47,3 +53,8 @@ export const readonlyHandler = {
 		return true
 	},
 }
+
+// 这里的extend的用法注意下
+export const shallowReadonlyHandler = extend({}, readonlyHandler, {
+	get: shallowReadonlyGet,
+})
