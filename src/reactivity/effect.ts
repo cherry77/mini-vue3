@@ -1,5 +1,8 @@
 import { extend } from "../shared"
 
+let activeEffect;
+let shouldTrack = false;
+
 class ReactiveEffect {
 	private _fn: any
 	deps = []
@@ -12,8 +15,16 @@ class ReactiveEffect {
 		this.scheduler = scheduler
 	}
 	run() {
+    if(!this.active){
+      return this._fn() // 调用结果要返回下
+    }
+    shouldTrack = true
 		activeEffect = this
-		return this._fn() // 调用结果要返回下
+
+    const result = this._fn()
+    // reset 
+    shouldTrack = false
+    return result
 	}
 	stop() {
     // 性能优化：避免多次stop
@@ -31,10 +42,15 @@ function cleanupEffect(effect) {
 	effect.deps.forEach((dep: any) => {
 		dep.delete(effect)
 	})
+  effect.deps.length = 0
 }
 
 const targetMap = new Map()
 export function track(target, key) {
+  // if(!activeEffect) return // 单纯获取响应式对象的属性时是undefined（指的是不在effect中时获取）
+  // if(!shouldTrack) return // 是否需要收集依赖，stop后不需要收集依赖
+  if(!isTracking()) return
+
 	let depsMap = targetMap.get(target)
 	if (!depsMap) {
 		depsMap = new Map()
@@ -45,10 +61,15 @@ export function track(target, key) {
 		dep = new Set()
 		depsMap.set(key, dep)
 	}
+  // 已经再dep中，不需要重复收集
+  if(dep.has(activeEffect)) return
 
-  if(!activeEffect) return // 单纯获取响应式对象的属性时是undefined（指的是不在effect中时获取）
 	dep.add(activeEffect)
 	activeEffect.deps.push(dep)
+}
+
+export function isTracking() {
+  return activeEffect && shouldTrack
 }
 
 export function trigger(target, key) {
@@ -68,7 +89,6 @@ export function stop(runner) {
 	runner.effect.stop()
 }
 
-let activeEffect
 export function effect(fn, options: any = {}) {
   // fn
 	const _effect = new ReactiveEffect(fn, options.scheduler)
