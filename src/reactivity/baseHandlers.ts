@@ -1,12 +1,18 @@
 import { track, trigger } from './effect'
+import { ReactiveFlags } from './reactive'
 
 // 优化：只调用一次
 const get = createGetter()
 const set = createSetter()
-const readonlyGet = createGetter(false)
+const readonlyGet = createGetter(true)
 
-function createGetter(isReadonly = true) {
+function createGetter(isReadonly = false) {
 	return function get(target, key) {
+		if (key === ReactiveFlags.IS_REACTIVE) {
+			return !isReadonly
+		}else if (key === ReactiveFlags.IS_READONLY) {
+			return isReadonly
+		}
 		if (isReadonly) {
 			// 收集依赖
 			track(target, key)
@@ -30,7 +36,7 @@ export const mutableHandler = {
 export const readonlyHandler = {
 	get: readonlyGet,
 	set(target, key, value) {
-    console.warn(`set failed. ${target} is readonly.`)
+		console.warn(`set failed. ${target} is readonly.`)
 		return true
 	},
 }
