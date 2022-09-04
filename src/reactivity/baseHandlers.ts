@@ -13,7 +13,7 @@ function createGetter(isReadonly = false) {
 		}else if (key === ReactiveFlags.IS_READONLY) {
 			return isReadonly
 		}
-		if (isReadonly) {
+		if (!isReadonly) {
 			// 收集依赖
 			track(target, key)
 		}
