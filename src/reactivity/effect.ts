@@ -61,10 +61,14 @@ export function track(target, key) {
 		dep = new Set()
 		depsMap.set(key, dep)
 	}
+	trackEffects(dep)
+}
+
+export function trackEffects(dep) {
   // 已经再dep中，不需要重复收集
   if(dep.has(activeEffect)) return
 
-	dep.add(activeEffect)
+  dep.add(activeEffect)
 	activeEffect.deps.push(dep)
 }
 
@@ -74,9 +78,12 @@ export function isTracking() {
 
 export function trigger(target, key) {
 	const depsMap = targetMap.get(target)
-	const deps = depsMap.get(key)
+	const dep = depsMap.get(key)
+	triggerEffects(dep)
+}
 
-	for (const effect of deps) {
+export function triggerEffects(dep) {
+  for (const effect of dep) {
 		if (effect.scheduler) {
 			effect.scheduler()
 		} else {
