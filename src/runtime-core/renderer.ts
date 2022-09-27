@@ -6,8 +6,11 @@ export function render(vnode, container) {
 }
 
 function patch(vnode, container) {
-  // 处理组件
+  // 处理组件 const App = { render(){}, setup(){} }
   processComponent(vnode, container)
+
+  // 处理element eg: return h('div', ...) 这种情况
+  processElement(vnode, container)
 }
 
 function processComponent(vnode: any, container: any) {
@@ -29,5 +32,9 @@ function setupRenderEffect(instance: any, container) {
   // vnode -> patch
   // vnode -> element -> mountElement
   patch(subTree, container)
+}
+
+function processElement(vnode: any, container: any) {
+  throw new Error("Function not implemented.")
 }
 
